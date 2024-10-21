@@ -13,7 +13,6 @@ class Signal_information(object):
 
     def update_signal_power(self,new_signal_power:float):
         self.signal_power=new_signal_power
-        print(self.signal_power)
         return self.signal_power
 
     @property
