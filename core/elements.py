@@ -1,4 +1,6 @@
 import json
+import string
+
 
 class Signal_information(object):
     def __init__(self, path:list):
@@ -8,11 +10,10 @@ class Signal_information(object):
     @property
     def signal_power(self,signal_power):
         self.signal_power= signal_power
-        print(self.signal_power)
         return self.signal_power
 
     def update_signal_power(self,new_signal_power:float):
-        self.signal_power=new_signal_power
+        self.signal_power=self.signal_power+new_signal_power
         return self.signal_power
 
     @property
@@ -21,12 +22,13 @@ class Signal_information(object):
         return self.noise_power
 
     @noise_power.setter
-    def noise_power(self):
-        pass
+    def noise_power(self, noise_power:float=0.0):
+        self.noise_power = self.noise_power+noise_power
+        return self.noise_power
 
     def update_noise_power(self, new_noise_power:float):
-        self.noise_power=new_noise_power
-
+        self.noise_power=self.noise_power+new_noise_power
+        return self.noise_power
 
     @property
     def latency(self, latency:float=0.0):
@@ -34,43 +36,50 @@ class Signal_information(object):
         return self.latency
 
     @latency.setter
-    def latency(self):
-        pass
+    def latency(self, latency:float=0.0):
+        self.latency= latency
+        return self.latency
 
     def update_latency(self, new_latency):
-        self.latency=new_latency
+        self.latency=self.latency+new_latency
+        return self.latency
 
     @property
-    def path(self):
-        pass
+    def path(self, path:list):
+        self.path=path
+        return path
 
     @path.setter
-    def path(self):
-        pass
+    def path(self, path:list):
+        self.path=path
 
-    def update_path(self):
-        pass
+    def update_path(self, node:str):
+        self.path.append(node)
+        return self.path
 
 
 class Node(object):
-    def __init__(self):
+    def __init__(self,label:str,position:tuple(float,float),connected_nodes:list[string],successive:dict[0]):
         pass
 
     @property
-    def label(self):
-        pass
+    def label(self,label:str):
+        self.label=label
+        return self.label
 
     @property
-    def position(self):
-        pass
+    def position(self,position:tuple(float,float)):
+        self.position=position
+        return self.position
 
     @property
-    def connected_nodes(self):
-        pass
+    def connected_nodes(self, connected_nodes:list):
+        self.connected_nodes=connected_nodes
 
     @property
-    def successive(self):
-        pass
+    def successive(self, successive:dict[0]):
+        self.successive=successive
+        return self.successive
 
     @successive.setter
     def successive(self):
