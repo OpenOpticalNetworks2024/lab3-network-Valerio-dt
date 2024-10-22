@@ -1,5 +1,6 @@
 import json
 import string
+import math
 
 
 class Signal_information(object):
@@ -129,19 +130,31 @@ class Line(object):
 
 
 class Network(object):
-    def __init__(self):
-        pass
+    def __init__(self, json_file:str):
+        self.nodes = {}
+        self.lines = {}
 
     @property
-    def nodes(self):
-        pass
+    def nodes(self, node:Node):
+        self.nodes=node
 
     @property
-    def lines(self):
-        pass
+    def lines(self, line:Line):
+        self.line=Line
 
     def draw(self):
-        pass
+        import matplotlib.pyplot as plt
+
+        plt.figure()
+        for line in self.lines.values():
+            node1 = self.nodes[line.label[0]].get_position()
+            node2 = self.nodes[line.label[1]].get_position()
+            plt.plot([node1[0], node2[0]], [node1[1], node2[1]], 'bo-')
+
+        for node in self.nodes.values():
+            plt.text(node.get_position()[0], node.get_position()[1], node.get_label(), fontsize=12)
+
+        plt.show()
 
     # find_paths: given two node labels, returns all paths that connect the 2 nodes
     # as a list of node labels. Admissible path only if cross any node at most once
