@@ -150,11 +150,7 @@ class Network(object):
             node1 = self.nodes[line.label[0]].get_position()
             node2 = self.nodes[line.label[1]].get_position()
             plt.plot([node1[0], node2[0]], [node1[1], node2[1]], 'bo-')
-            print(node1)
-        for node in self.nodes.values():
-            plt.text(node.get_position()[0], node.get_position()[1], node.get_label(), fontsize=12)
 
-        plt.show()
 
     # find_paths: given two node labels, returns all paths that connect the 2 nodes
     # as a list of node labels. Admissible path only if cross any node at most once
