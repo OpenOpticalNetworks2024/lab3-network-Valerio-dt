@@ -85,38 +85,47 @@ class Node(object):
     def successive(self):
         pass
 
-    def propagate(self):
-        pass
+    def propagate(self, signal:Signal_information):
+        signal.update_path(self.label)
+        next_line = self.successive[signal.path[-1]]
+        next_line.propagate(signal)
 
 
 class Line(object):
-    def __init__(self):
-        pass
+    def __init__(self, label:str, length:float):
+        self.label=label
+        self.length=length
+        self.successive={}
 
     @property
-    def label(self):
-        pass
+    def label(self, label:str):
+        self.label=label
+        return self.label
 
     @property
-    def length(self):
-        pass
+    def length(self, length:float):
+        self.length=length
+        return self.length
 
     @property
     def successive(self):
-        pass
+        return self.successive
 
     @successive.setter
-    def successive(self):
-        pass
+    def successive(self, successive:dict):
+        self.successive=successive
 
     def latency_generation(self):
-        pass
+        return self.length / (2/3*3*10**8)
 
-    def noise_generation(self):
-        pass
+    def noise_generation(self, signal_power:float):
+        return 1e-9*signal_power*self.length
 
-    def propagate(self):
-        pass
+    def propagate(self, signal:Signal_information):
+        signal.update_latency(self.latency_generation())
+        signal.update_noise_power(self.noise_generation(signal.get_signal_power()))
+        next_node = self.successive[signal.path[-1]]
+        next_node.propagate(signal)
 
 
 class Network(object):
