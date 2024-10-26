@@ -1,6 +1,7 @@
 import json
 import string
 import math
+import pandas as pd
 from signal import signal
 
 
@@ -136,7 +137,7 @@ class Network(object):
         self.nodes=node
 
     @property
-    def lines(self, line:Line):
+    def lines(self):
         self.line=Line
 
         with open(json, 'r') as file:
@@ -145,7 +146,6 @@ class Network(object):
                 node = Node(node_label, node_data['position'], node_data['connected_nodes'])
                 self.nodes[node_label] = node
 
-            # Initialize the lines based on the node connections
             for node_label, node in self.nodes.items():
                 for connected_node_label in node.connected_nodes:
                     node_position = node.position
@@ -156,8 +156,26 @@ class Network(object):
                     line = Line(line_label, length)
                     self.lines[line_label] = line
 
-        # Method to connect nodes and lines
 
+
+    # find_paths: given two node labels, returns all paths that connect the 2 nodes
+    # as a list of node labels. Admissible path only if cross any node at most once
+    def find_paths(self, label1:str, label2:str, path=[]):
+        path = path + [label1]
+        if label1 == label2:
+            return [path]
+        if label1 not in self.nodes:
+            return []
+        paths = []
+        for node in self.nodes[label1].connected_nodes:
+            if node not in path:
+                newpaths = self.find_paths(node, label2, path)
+                for newpath in newpaths:
+                    paths.append(newpath)
+        return paths
+
+    # connect function set the successive attributes of all NEs as dicts
+    # each node must have dict of lines and viceversa
     def connect(self):
         for node_label, node in self.nodes.items():
             for connected_node_label in node.connected_nodes:
@@ -165,30 +183,12 @@ class Network(object):
                 node.successive[connected_node_label] = self.lines[line_label]
                 self.lines[line_label].successive[node_label] = self.nodes[connected_node_label]
 
-        # Method to find all paths between two nodes
-
-    def find_paths(self, start: str, end: str, path=[]):
-        path = path + [start]
-        if start == end:
-            return [path]
-        if start not in self.nodes:
-            return []
-        paths = []
-        for node in self.nodes[start].connected_nodes:
-            if node not in path:
-                newpaths = self.find_paths(node, end, path)
-                for newpath in newpaths:
-                    paths.append(newpath)
-        return paths
-
-        # Method to propagate a signal through the network
-
-    def propagate(self, signal: Signal_information):
+    # propagate signal_information through path specified in it
+    # and returns the modified spectral information
+    def propagate(self,signal: Signal_information):
         start_node = self.nodes[signal.path[0]]
         start_node.propagate(signal)
         return signal
-
-        # Method to draw the network using matplotlib
 
     def draw(self):
         import matplotlib.pyplot as plt
@@ -204,17 +204,6 @@ class Network(object):
 
         plt.show()
 
-    # find_paths: given two node labels, returns all paths that connect the 2 nodes
-    # as a list of node labels. Admissible path only if cross any node at most once
-    def find_paths(self, label1, label2):
-        pass
 
-    # connect function set the successive attributes of all NEs as dicts
-    # each node must have dict of lines and viceversa
-    def connect(self):
-        pass
 
-    # propagate signal_information through path specified in it
-    # and returns the modified spectral information
-    def propagate(self, signal_information):
-        pass
+
