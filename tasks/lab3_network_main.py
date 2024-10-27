@@ -1,13 +1,14 @@
 import json
-import sys
+import math
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 import pandas as pd
 from pathlib import Path
-core_path= Path(__file__).parent.parent / 'core'
-sys.path.append(str(core_path))
-from elements.py import Network, Signal_information
-
+project_root=Path(__file__).parent.parent
+core_path=project_root / 'core'
+elements_path=core_path / 'elements'
+from core.elements import Network, Signal_information
 # Exercise Lab3: Network
 
 ROOT = Path(__file__).parent.parent
@@ -20,21 +21,31 @@ file_input = INPUT_FOLDER / 'nodes.json'
 # Convert this dataframe in a csv file called 'weighted_path' and finally plot the network.
 # Follow all the instructions in README.md file
 
-data = []
-for start_node in network.nodes:
-    for end_node in network.nodes:
-        if start_node != end_node:
-            paths = network.find_paths(start_node, end_node)
-            for path in paths:
-                signal_info = Signal_information(signal_power, path)
-                updated_signal_info = network.propagate(signal_info)
-                snr = 10 * math.log10(
-                    updated_signal_info.signal_power / updated_signal_info.noise_power) if updated_signal_info.noise_power != 0 else float(
-                    'inf')
-                data.append({
-                    "Path": "->".join(path),
-                    "Latency (s)": updated_signal_info.latency,
-                    "Noise Power (W)": updated_signal_info.noise_power,
-                    "SNR (dB)": snr
-                })
+def generate_path(network: Network, signal_power: float):
+    data = []
+    for start_node in network.nodes:
+        for end_node in network.nodes:
+            if start_node != end_node:
+                paths = network.find_paths(start_node, end_node)
+                for path in paths:
+                    signal_info = Signal_information(signal_power, path)
+                    updated_signal_info = network.propagate(signal_info)
+                    snr = 10 * math.log10(updated_signal_info.signal_power / updated_signal_info.noise_power) if updated_signal_info.noise_power != 0 else float('inf')
+                    data.append({
+                        "Path": "->".join(path),
+                        "Latency (s)": updated_signal_info.latency,
+                        "Noise Power (W)": updated_signal_info.noise_power,
+                        "SNR (dB)": snr
+                    })
+    return pd.DataFrame(data)
+
+network = (file_input)
+network.connect()
+network.draw()
+
+df_paths = generate_path(network, signal_power=0.001)
+OUTPUT_FILE = ROOT / 'weighted_path.csv'
+df_paths.to_csv(OUTPUT_FILE, index=False)
+print(f"Data saved to {OUTPUT_FILE}")
+
 

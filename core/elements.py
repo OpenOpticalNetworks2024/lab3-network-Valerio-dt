@@ -1,12 +1,13 @@
 import json
 import string
 import math
+import matplotlib.pyplot as plt
 import pandas as pd
 from signal import signal
 
 
 class Signal_information(object):
-    def __init__(self,signal_power:float, path:list):
+    def __init__(self,signal_power:float, path:list(str)):
         self.signal_power=signal_power
         self.latency = 0.0
         self.noise_power=0.0
@@ -47,11 +48,11 @@ class Signal_information(object):
         return self.latency
 
     @property
-    def path(self, path:list):
+    def path(self, path:list(str)):
         return path
 
     @path.setter
-    def path(self, path:list):
+    def path(self, path:list(str)):
         self.path=path
 
     def update_path(self, node:str):
@@ -60,11 +61,11 @@ class Signal_information(object):
 
 
 class Node(object):
-    def __init__(self,label:str,position:tuple,connected_nodes:list[string], successive:dict):
+    def __init__(self,label:str,position:tuple,connected_nodes:list[string]):
         self.label=label
         self.position=position
         self.connected_nodes=connected_nodes
-        self.successive=successive
+        self.successive= {}
 
     @property
     def label(self):
@@ -88,8 +89,8 @@ class Node(object):
 
     def propagate(self, signal:Signal_information):
         signal.update_path(self.label)
-        next_line = self.successive[signal.path[-1]]
-        next_line.propagate(signal)
+        next_prop = self.successive[signal.path[+1]]
+        next_prop.propagate(signal)
 
 
 class Line(object):
@@ -115,30 +116,30 @@ class Line(object):
         self.successive=successive
 
     def latency_generation(self):
-        return self.length / (2/3*3*10**8)
+        return self.length / (2/3*3*10^8)
 
     def noise_generation(self, signal_power:float):
         return 1e-9*signal_power*self.length
 
     def propagate(self, signal:Signal_information):
         signal.update_latency(self.latency_generation())
-        signal.update_noise_power(self.noise_generation(signal.get_signal_power()))
-        next_node = self.successive[signal.path[-1]]
+        signal.update_noise_power(self.noise_generation(signal.noise_power()))
+        next_node = self.successive[signal.path[+1]]
         next_node.propagate(signal)
 
 
 class Network(object):
-    def __init__(self, json_file:str):
-        self.nodes = {}
-        self.lines = {}
+    def __init__(self,nodes:dict,lines:dict, json_file:str):
+        self.nodes = nodes
+        self.lines = lines
 
     @property
     def nodes(self, node:Node):
-        self.nodes=node
+        self.nodes.update(node)
 
     @property
     def lines(self):
-        self.line=Line
+        self.lines.update(line)
 
         with open(json, 'r') as file:
             data = json.load(file)
@@ -150,8 +151,7 @@ class Network(object):
                 for connected_node_label in node.connected_nodes:
                     node_position = node.position
                     connected_node_position = self.nodes[connected_node_label].position
-                    length = math.sqrt((node_position[0] - connected_node_position[0]) ** 2 +
-                                       (node_position[1] - connected_node_position[1]) ** 2)
+                    length = math.sqrt((node_position[0] - connected_node_position[0]) ** 2 + (node_position[1] - connected_node_position[1]) ** 2)
                     line_label = node_label + connected_node_label
                     line = Line(line_label, length)
                     self.lines[line_label] = line
@@ -160,16 +160,16 @@ class Network(object):
 
     # find_paths: given two node labels, returns all paths that connect the 2 nodes
     # as a list of node labels. Admissible path only if cross any node at most once
-    def find_paths(self, label1:str, label2:str, path=[]):
-        path = path + [label1]
-        if label1 == label2:
+    def find_paths(self, label1:str, label2:str):
+        path = [label1]
+        if label1 == label2: #the two nodes have the same label
             return [path]
-        if label1 not in self.nodes:
+        if label1 not in self.nodes: #no node with that label, no path
             return []
         paths = []
-        for node in self.nodes[label1].connected_nodes:
-            if node not in path:
-                newpaths = self.find_paths(node, label2, path)
+        for node in self.nodes[label1].connected_nodes: #look at the funciton connected nodes of the given label and pass all the nodes to find path
+            if node not in path: #if not met before, new path
+                newpaths = self.find_paths(node, label2)
                 for newpath in newpaths:
                     paths.append(newpath)
         return paths
@@ -191,7 +191,7 @@ class Network(object):
         return signal
 
     def draw(self):
-        import matplotlib.pyplot as plt
+
 
         plt.figure()
         for line in self.lines.values():
