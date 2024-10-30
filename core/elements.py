@@ -7,7 +7,7 @@ from signal import signal
 
 
 class Signal_information(object):
-    def __init__(self,signal_power:float, path:list(str)):
+    def __init__(self,signal_power:float, path:list):
         self.signal_power=signal_power
         self.latency = 0.0
         self.noise_power=0.0
@@ -48,11 +48,11 @@ class Signal_information(object):
         return self.latency
 
     @property
-    def path(self, path:list(str)):
+    def path(self, path:list):
         return path
 
     @path.setter
-    def path(self, path:list(str)):
+    def path(self, path:list):
         self.path=path
 
     def update_path(self, node:str):
@@ -138,7 +138,7 @@ class Network(object):
         self.nodes.update(node)
 
     @property
-    def lines(self):
+    def lines(self, line=Line):
         self.lines.update(line)
 
         with open(json, 'r') as file:

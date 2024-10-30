@@ -7,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 project_root=Path(__file__).parent.parent
 core_path=project_root / 'core'
-elements_path=core_path / 'elements'
+
 from core.elements import Network, Signal_information
 # Exercise Lab3: Network
 
@@ -38,7 +38,6 @@ def generate_path(network: Network, signal_power: float):
                         "SNR (dB)": snr
                     })
     return pd.DataFrame(data)
-
 network = (file_input)
 network.connect()
 network.draw()
