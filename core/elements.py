@@ -129,17 +129,23 @@ class Line(object):
 
 
 class Network(object):
-    def __init__(self,nodes:dict,lines:dict, json_file:str):
-        self.nodes = nodes
+    def __init__(self,node:dict, lines:dict, json_file:str):
+        self.nodes = node
         self.lines = lines
 
     @property
     def nodes(self, node:Node):
         self.nodes.update(node)
 
+    @nodes.setter
+    def nodes_setter(self, node: dict):
+        self.nodes = node
+
+
     @property
     def lines(self, line=Line):
         self.lines.update(line)
+
 
         with open(json, 'r') as file:
             data = json.load(file)

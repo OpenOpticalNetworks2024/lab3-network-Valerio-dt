@@ -21,6 +21,21 @@ file_input = INPUT_FOLDER / 'nodes.json'
 # Convert this dataframe in a csv file called 'weighted_path' and finally plot the network.
 # Follow all the instructions in README.md file
 
+
+
+
+
+with open(file_input, 'r') as f:
+    network_data = json.load(f)
+
+# Extract nodes and lines from the JSON data
+nodes = network_data.get("nodes", {})
+lines = network_data.get("lines", {})
+
+# Initialize the Network instance with nodes and lines
+network = Network(nodes,lines, file_input)
+network.connect()
+network.draw()
 def generate_path(network: Network, signal_power: float):
     data = []
     for start_node in network.nodes:
@@ -38,9 +53,8 @@ def generate_path(network: Network, signal_power: float):
                         "SNR (dB)": snr
                     })
     return pd.DataFrame(data)
-network = (file_input)
-network.connect()
-network.draw()
+
+
 
 df_paths = generate_path(network, signal_power=0.001)
 OUTPUT_FILE = ROOT / 'weighted_path.csv'
