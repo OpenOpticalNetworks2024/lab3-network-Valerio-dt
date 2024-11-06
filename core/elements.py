@@ -91,34 +91,21 @@ class Node(object):
     def successive(self, successive:dict):
         self._successive=successive
 
-    def propagate(self, signal:Signal_information):
-       # signal.update_path(self._label)
-       # next_prop = self._successive[signal._path[+1]]
-       # next_prop.propagate(signal)
+    def propagate(self, signal: Signal_information):
+        if len(signal._path) <= 1 or self._label in signal._path[1:]:
+            return
+        if len(signal._path) <= 1 and signal._path[0] == self._label:
+            return
 
-       if len(signal._path) <= 1 and signal._path[0] == self._label:
-           print(f"Reached the final node: {self._label}. Stopping propagation.")
-           return
+        current_node_label = signal._path.pop(0)
+        signal.update_path(self._label)
 
+        if signal._path:
+            next_node_label = signal._path[0]
+            next_line = self._successive.get(next_node_label)
+            if next_line:
+                next_line.propagate(signal)
 
-       signal.update_path(self._label)
-
-
-       print(f"Current node: {self._label}")
-       print(f"Remaining path: {signal._path}")
-
-       # Check for the next node to propagate to
-       if signal._path:
-           next_node_label = signal._path[0]  # The next target node in the path
-           next_line = self._successive.get(next_node_label)  # Get the line to the next node
-
-           if next_line:
-               # Use the line to propagate the signal to the next node
-               next_line.propagate(signal)
-           else:
-               print(f"Error: No line found to propagate from {self._label} to {next_node_label}.")
-       else:
-           print("No more nodes in the path. Ending propagation.")
 
 class Line(object):
     def __init__(self, label:str, length:float):
@@ -143,42 +130,28 @@ class Line(object):
         self._successive=successive
 
     def latency_generation(self):
-        return self._length / (2/3*3*10e8)
+        return self._length / ((2/3)*3*10**8)
 
     def noise_generation(self, signal_power:float):
-        noise_generated=1e-9*signal_power*self._length
+        noise_generated=1**-9*signal_power*self._length
         return noise_generated
 
     def propagate(self, signal:Signal_information):
-       # signal.update_latency(self.latency_generation())
-       # signal.update_noise_power(self.noise_generation(signal.noise_power))
       #  next_node = self._successive[signal._path[+1]]
      #   next_node.propagate_line(signal)
-       # Update the signal's latency and noise power
-       signal.update_latency(self.latency_generation())
-       signal.update_noise_power(self.noise_generation(signal._signal_power))
+      signal.update_latency(self.latency_generation())
+      signal.update_noise_power(self.noise_generation(signal._signal_power))
 
-       # Get the current position in the path
-       current_node_label = signal._path[0]  # assuming the first element is the starting node
-       print(f"Current node: {current_node_label}")
+      if len(signal._path) > 1:
 
-       # Check if there's a next node in the path
-       if len(signal._path) > 1:
-           # Remove the first node from the path as we're propagating past it
-           signal._path.pop(0)
-           next_node_label = signal._path[0]
-           print(f"Next node: {next_node_label}")
+          signal._path.pop(0)
+          next_node_label = signal._path[0]
 
-           # Ensure next node exists in the _successive dictionary
-           if next_node_label in self._successive:
-               next_node = self._successive[next_node_label]
-               print(f"Propagating to next node: {next_node_label}")
-               next_node.propagate(signal)
-           else:
-               print(
-                   f"Error: No successive element found for {next_node_label} in {current_node_label}'s _successive dictionary")
-       else:
-           print("End of path reached, propagation complete.")
+          if next_node_label in self._successive:
+              next_node = self._successive[next_node_label]
+              next_node.propagate(signal)
+
+
 
 
 class Network(object):
@@ -221,25 +194,18 @@ class Network(object):
       #  return paths
 
     def find_paths(self, label1, label2):
-        # Start the recursive search with a helper method
         return self._find_paths_recursive(label1, label2, path=[])
 
     def _find_paths_recursive(self, current, destination, path):
-        # Add the current node to the path
         path = path + [current]
-
-        # Base case: if we reached the destination node, return the current path
         if current == destination:
             return [path]
 
-        # Initialize paths list to store all valid paths
         paths = []
 
-        # Loop through connected nodes to continue pathfinding
         for neighbor in self.nodes[current].connected_nodes:
-            # Avoid revisiting nodes in the current path to prevent cycles
+
             if neighbor not in path:
-                # Recursive call
                 new_paths = self._find_paths_recursive(neighbor, destination, path)
                 for new_path in new_paths:
                     paths.append(new_path)
@@ -264,17 +230,11 @@ class Network(object):
                 if line_label_reverse not in self.lines:
                     self.lines[line_label_reverse] = Line(label=line_label_reverse, length=line_length)
 
-                # Set up successive dictionaries for nodes and lines
                 node.successive[connected_node_label] = self.lines[line_label_forward]
                 self.lines[line_label_forward].successive[connected_node_label] = self.nodes[connected_node_label]
 
                 self.nodes[connected_node_label].successive[node_label] = self.lines[line_label_reverse]
                 self.lines[line_label_reverse].successive[node_label] = node
-
-                print(
-                    f"Connected {node_label} to {connected_node_label} with lines {line_label_forward} and {line_label_reverse}")
-                print(f"{node_label} successive: {node.successive}")
-                print(f"{connected_node_label} successive: {self.nodes[connected_node_label].successive}")
 
     # propagate signal_information through path specified in it
     # and returns the modified spectral information
@@ -284,7 +244,6 @@ class Network(object):
         return signal
 
     def draw(self):
-
 
         plt.figure()
         for line in self.lines.values():
