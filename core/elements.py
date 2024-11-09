@@ -5,7 +5,8 @@ import math
 import matplotlib.pyplot as plt
 import pandas as pd
 from signal import signal
-
+from typing import List
+from pathlib import Path
 
 class Signal_information(object):
     def __init__(self,signal_power:float, path:list):
@@ -137,8 +138,6 @@ class Line(object):
         return noise_generated
 
     def propagate(self, signal:Signal_information):
-      #  next_node = self._successive[signal._path[+1]]
-     #   next_node.propagate_line(signal)
       signal.update_latency(self.latency_generation())
       signal.update_noise_power(self.noise_generation(signal._signal_power))
 
@@ -179,38 +178,24 @@ class Network(object):
 
     # find_paths: given two node labels, returns all paths that connect the 2 nodes
     # as a list of node labels. Admissible path only if cross any node at most once
-   # def find_paths(self, label1:str, label2:str):
-    #    path = [label1]
-     #   if label1 == label2: #the two nodes have the same label
-     #       return [path]
-     #   if label1 not in self.nodes: #no node with that label, no path
-     #       return []
-     #   paths = []
-     #   for node in self.nodes[label1].connected_nodes: #look at the funciton connected nodes of the given label and pass all the nodes to find path
-      #      if node not in path: #if not met before, new path
-      #          newpaths = self.find_paths(node, label2)
-      #          for newpath in newpaths:
-      #              paths.append(newpath)
-      #  return paths
-
-    def find_paths(self, label1, label2):
-        return self._find_paths_recursive(label1, label2, path=[])
-
-    def _find_paths_recursive(self, current, destination, path):
-        path = path + [current]
-        if current == destination:
-            return [path]
-
+    def find_paths(self, start: str, end: str) -> List[List[str]]:
         paths = []
 
-        for neighbor in self.nodes[current].connected_nodes:
+        def recursive_find_paths(current_node, end_node, current_path):
+            current_path.append(current_node)
 
-            if neighbor not in path:
-                new_paths = self._find_paths_recursive(neighbor, destination, path)
-                for new_path in new_paths:
-                    paths.append(new_path)
+            if current_node == end_node:
+                paths.append(current_path[:])
+            else:
+                for next_node in self.nodes[current_node].connected_nodes:
+                    if next_node not in current_path:
+                        recursive_find_paths(next_node, end_node, current_path)
 
-        return paths
+            current_path.pop()
+        recursive_find_paths(start, end, [])
+
+        unique_paths = [list(path) for path in {tuple(p) for p in paths}]
+        return unique_paths
 
     # connect function set the successive attributes of all NEs as dicts
     # each node must have dict of lines and viceversa
@@ -254,8 +239,10 @@ class Network(object):
         for node in self.nodes.values():
             plt.text(node.position[0], node.position[1], node.label, fontsize=12)
 
-        plt.show()
+        save_path = Path("..") / "results" / "network_plot.png"
 
+        plt.savefig(save_path, format='png')
+        plt.show()
 
 
 
